@@ -69,7 +69,7 @@
                     <label>Quantity:</label>
                   </div>
                   <div class="cell">
-                    <input type="number" v-model.number="product.qty">
+                    <input type="number" v-model.number="product.quantity">
                   </div>
                 </div>
               </form>
@@ -89,6 +89,7 @@
         v-if="showSidebar" 
         :toggle="toggleSidebar"
         :cart="cart" 
+        :inventory="inventory"
       />
 
       <footer>
@@ -108,8 +109,8 @@
         },
         methods: {
           addToCart(name, index) {
-            if (!this.cart[name]) (this.cart[name]) == 0
-            this.cart[name] += this.inventory[index].qty
+            if (!this.cart[name]) (this.cart[name]) = 0
+            this.cart[name] += this.inventory[index].quantity
             console.log(this.cart)
           },
           toggleSidebar(){
@@ -124,13 +125,26 @@
       })
       
       app.component('sidebar', {
-        props: ['toggle', 'cart'],
+        props: ['toggle', 'cart', 'inventory'],
         computed: {
-          cartTotal(){
-            return this.cart.carrots * 4.82
+          cartTotal(){}
+        },
+        methods: {
+          getPrice(name){
+            const product = this.inventory.find((p) => {
+              return p.name == name
+            })
+            return product.price.USD
+          },
+          calculateTotal(){
+            const names = Object.keys(this.cart)
+            const total = Object.values(this.cart).reduce((acc, curr, index) => {
+              return acc + (curr * this.getPrice(names[index]))
+            })
+            return total
           }
         },
-        template : `
+        template: `
         
           <aside class="cart-container">
             <div class="cart">
@@ -155,11 +169,11 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
+                    <tr v-for="(quantity, key, i) in cart" :key="i">
                       <td><i class="icofont-carrot icofont-3x"></i></td>
-                      <td>Carrot</td>
-                      <td>$1.00</td>
-                      <td class="center">{{ cart.carrots }}</td>
+                      <td>{{ key }}</td>
+                      <td>\${{ getPrice(key) }}</td>
+                      <td class="center">{{ quantity }}</td>
                       <td>\${{ cart.carrots * 4.82 }}</td>
                       <td class="center">
                         <button class="btn btn-light cart-remove">
@@ -172,7 +186,7 @@
 
                 <p class="center"><em>No items in cart</em></p>
                 <div class="spread">
-                  <span><strong>Total:</strong>\${{ cartTotal }}</span>
+                  <span><strong>Total:</strong>\${{ calculateTotal() }}</span>
                   <button class="btn btn-light">Checkout</button>
                 </div>
               </div>
